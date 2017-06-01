@@ -1,0 +1,339 @@
+// Data structure
+import java.util.Set;
+
+// OSC libraries
+import oscP5.*;
+import netP5.*;
+
+// Kinect libraries
+import KinectPV2.KJoint;
+import KinectPV2.*;
+
+// Body of particles to be rendered
+HashMap<Integer, ParticleBody> particleBodies; 
+
+// Kinect conatiner
+KinectPV2 kinect;
+
+// OSC controller and destiny location
+OscP5 oscP5;
+NetAddress destinyLocation;
+
+// Max distance between two bodies
+float maxDist = dist(0, 0, width, height);
+
+// Inverted kinect
+boolean invKinect = false;
+
+// Physical space size
+float minX = 0;
+float maxX = 3;
+float minY = 0;
+float maxY = 1;
+float minZ = 0.3;
+float maxZ = 5;
+
+// Record variables
+boolean isRecording = false;
+boolean isPlayingBack = false;
+String recordFilename = "rec2.txt";
+KRecord rec;
+
+void setup() {
+  // Screen size, renderer and frameRate
+  //fullScreen(FX2D, SPAN);
+  size(1280, 720, FX2D);
+  frameRate(30);
+
+  // Kinect setup
+  kinect = new KinectPV2(this);
+  kinect.enableSkeleton3DMap(true);
+  kinect.init();
+  // Create bodies holder
+  particleBodies = new HashMap<Integer, ParticleBody>();
+
+  // Initiate body controller and destiny location
+  oscP5 = new OscP5(this, 12000);
+  destinyLocation = new NetAddress("143.106.219.179", 12000);
+
+  // Instantiate record obj
+  rec = new KRecord();
+  if (isPlayingBack)
+    rec.loadRecord(recordFilename);
+}
+
+void draw() {
+  // Clear screen
+  background(0);
+
+  // Print FPS
+  text("FPS " + round(frameRate), 10, 10 + textAscent());
+
+  // Get bodies from record or kinect
+  HashMap<Integer, PVector[]> bodies =  new HashMap<Integer, PVector[]>();
+  if (isPlayingBack) {
+    // Check if there is another frame
+    if (rec.hasFrame()) {
+      bodies = rec.getFrame();
+    } else {
+      println("End of record");
+      exit();
+      return;
+    }
+  } else {
+    // Get all joints from the detected bodies
+    for (KSkeleton skeleton : kinect.getSkeleton3d())
+      if (skeleton.isTracked())
+        bodies.put(skeleton.getIndexColor(), 
+          mapSkeletonToScreen(skeleton.getJoints()));
+
+    if (isRecording)
+      rec.addFrameRecord(bodies);
+  }
+
+  Set<Integer> detectedId = bodies.keySet();
+
+  // Update bodies position
+  for (Integer id : bodies.keySet()) {
+    ParticleBody pBody = particleBodies.getOrDefault(id, null);     
+
+    if (pBody == null) {
+      // Create a new particle body
+      pBody = new ParticleBody(bodies.get(id), id);
+      // Store list
+      particleBodies.put(id, pBody);
+    } else {
+      // Update body's joints
+      pBody.update(bodies.get(id));
+    }
+  }
+
+  ParticleBody[] pBodies = particleBodies.values().toArray(new ParticleBody[0]);
+
+  for (int b = pBodies.length - 1; b >=0; b--) {
+    if (detectedId.contains(pBodies[b].bodyColor)) {
+      pBodies[b].render(pBodies);
+    } else if (pBodies[b].isDead()) {
+      particleBodies.remove(b);
+    }
+  }
+
+  if (detectedId.size() != particleBodies.size()) {
+    ArrayList<Integer> deadBodies = new ArrayList<Integer>();
+
+    for (Integer id : particleBodies.keySet())
+      if (!deadBodies.contains(id))
+        deadBodies.add(id);
+
+    for (Integer id : deadBodies)
+      particleBodies.remove(id);
+  }
+
+  fill(255);
+  text("Body count: " + particleBodies.size(), 10, 20 + textAscent());
+
+  // Send bodies information to PD
+  // Send the number of detected bodies
+  OscMessage msg = new OscMessage("/people/number");
+  msg.add(detectedId.size());
+  oscP5.send(msg, destinyLocation);
+
+  // Send the position of each body
+  for (int body = 0; body < pBodies.length; body++) {
+    msg.clear();
+    msg.setAddrPattern("/people/position/p" + body);
+    ParticleBody particleBody = pBodies[body];
+    msg.add(map(particleBody.center.x, 0, width, 0, 1));
+    msg.add(map(particleBody.center.y, 0, height, 0, 1));
+    msg.add(particleBody.center.z);
+    oscP5.send(msg, destinyLocation);
+  }
+
+  // Send a done signal
+  msg.clear();
+  msg.setAddrPattern("/people/done");
+  msg.add(1);
+  oscP5.send(msg, destinyLocation);
+  rec.saveRecord(recordFilename);
+}
+
+PVector[] mapSkeletonToScreen(KJoint[] joints) {
+  // Create mapped joints array
+  PVector[] mappedJoints = new PVector[joints.length];
+
+  if (invKinect) {
+    for (int j = 0; j < joints.length; j++) {
+      mappedJoints[j] = kinect.MapCameraPointToColorSpace(joints[j].getPosition());
+      mappedJoints[j].x = width - mappedJoints[j].x * (float)width / KinectPV2.WIDTHColor;
+      mappedJoints[j].y *= (float)height / KinectPV2.HEIGHTColor;
+    }
+  } else {
+    for (int j = 0; j < joints.length; j++) {
+      mappedJoints[j] = kinect.MapCameraPointToColorSpace(joints[j].getPosition());
+      mappedJoints[j].x *= (float)width / KinectPV2.WIDTHColor;
+      mappedJoints[j].y *= (float)height / KinectPV2.HEIGHTColor;
+    }
+  }
+  return mappedJoints;
+}
+
+// Particle body
+class ParticleBody {
+  ParticleSystem[] psJoints;
+  PVector center;
+  int bodyColor;
+  Timer addParticleTimer;
+
+  public ParticleBody(PVector[] joints, int bodyColor) {
+    // Store body color index
+    this.bodyColor = bodyColor;
+    // Create ps list
+    psJoints = new ParticleSystem[joints.length];
+    // Create ps joints
+    for (int j = 0; j < joints.length; j++)
+      psJoints[j] = new ParticleSystem(20, joints[j], bodyColor);
+    // Create and start timer
+    addParticleTimer = new Timer();
+    center = joints[KinectPV2.JointType_SpineMid];
+  }
+
+  public void update(PVector[] joints) {
+    for (int j = 0; j < joints.length; j++)
+      // Update ps positions
+      psJoints[j].origin = joints[j];
+    center = joints[KinectPV2.JointType_SpineMid];
+  }
+
+  public void render(ParticleBody[] pBodies) {
+    // Check if its time to add a new particle to the each ps
+    if (addParticleTimer.getTime() > 1) {
+      int pColor = bodyColor;
+      for (int b = 0; b < pBodies.length; b++) {
+        if (pBodies[b].bodyColor == bodyColor)
+          continue;
+        float dist = dist(pBodies[b].center.x, pBodies[b].center.y, center.x, center.y);
+        float choice = random(maxDist); 
+        text(choice + " \\ " + dist, 10, 30 + textAscent());
+        if (5 * choice > dist) {
+          pColor = pBodies[b].bodyColor;
+          break;
+        }
+      }
+      for (int j = 0; j < psJoints.length; j++) {
+        // Run ps
+        psJoints[j].run();
+        // Add a new particle to the ps
+        psJoints[j].addParticle(1, pColor);
+      }
+      addParticleTimer.reset();
+    } else {
+      for (int j = 0; j < psJoints.length; j++) {
+        // Run ps
+        psJoints[j].run();
+      }
+    }
+  }
+
+  public boolean isDead() {
+    for (ParticleSystem ps : psJoints) {
+      if (!ps.isDead())
+        return false;
+    }
+    return true;
+  }
+}
+
+// Particle System
+class ParticleSystem {
+
+  ArrayList<Particle> particles;
+  PVector origin;
+  int psColor;
+
+  ParticleSystem(int num, PVector v, int psColor) {
+    this.psColor = psColor;
+    particles = new ArrayList<Particle>();
+    origin = v.copy();
+    addParticle(num, psColor);
+  }
+
+  void run() {
+    // Cycle through the ArrayList backwards, because we are deleting while iterating
+    for (int i = particles.size()-1; i >= 0; i--) {
+      Particle p = particles.get(i);
+      p.run();
+      if (p.isDead()) {
+        particles.remove(i);
+      }
+    }
+  }
+
+  void addParticle(int numberParticles, int currentColor) {
+    for (int i = 0; i < numberParticles; i++) {
+      particles.add(new Particle(origin, currentColor));
+    }
+  }
+
+  // A method to test if the particle system still has particles
+  boolean isDead() {
+    return particles.isEmpty();
+  }
+}
+
+// A simple Particle class
+class Particle {
+  PVector position;
+  PVector velocity;
+  PVector acceleration;
+  float lifespan;
+  int birth;
+  int pColor;
+
+  Particle(PVector l, int pColor) {
+    acceleration = new PVector(0, 0.1);
+    velocity = new PVector(random(-1, 1), random(-2, 0));
+    position = l.copy().add(random(-50, 50), random(-50, 50));
+    lifespan = 1000.0;
+    birth = millis();
+    this.pColor = pColor;
+  }
+
+  void run() {
+    update();
+    display();
+  }
+
+  // Method to update position
+  void update() {
+    velocity.add(acceleration);
+    position.add(velocity);
+  }
+
+  // Method to display
+  void display() {
+    stroke(255, lifespan);
+    fill(pColor, lifespan);
+    ellipse(position.x, position.y, 4, 4);
+  }
+
+  // Is the particle still useful?
+  boolean isDead() {
+    return (millis() - birth > lifespan);
+  }
+}
+
+class Timer {
+  int initialTime;
+
+  public Timer() {
+    reset();
+  }
+
+  public int getTime() {
+    return millis() - initialTime;
+  }
+
+  public void reset() {
+    initialTime = millis();
+  }
+}
