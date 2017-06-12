@@ -33,6 +33,11 @@ float maxY = 1;
 float minZ = 0.3;
 float maxZ = 5;
 
+// Hands state
+int leftIsOpen;
+int rightIsOpen;
+
+
 // Record variables
 boolean isRecording = false;
 boolean isPlayingBack = false;
@@ -55,6 +60,10 @@ void setup() {
   // Initiate body controller and destiny location
   oscP5 = new OscP5(this, 12000);
   destinyLocation = new NetAddress("143.106.219.179", 12000);
+
+  // Initiate hands state
+  rightIsOpen = 2;
+  leftIsOpen = 2;
 
   // Instantiate record obj
   rec = new KRecord();
@@ -85,8 +94,8 @@ void draw() {
     for (KSkeleton skeleton : kinect.getSkeleton3d())
       if (skeleton.isTracked()){
         bodies.put(skeleton.getIndexColor(), 
-        mapSkeletonToScreen(skeleton.getJoints()));
-      }
+        mapSkeletonToScreen(skeleton.getJoints()));        
+    }
 
     if (isRecording)
       rec.addFrameRecord(bodies);
@@ -139,19 +148,52 @@ void draw() {
   msg.add(detectedId.size());
   oscP5.send(msg, destinyLocation);
 
-  // Send the position of each body
+  // Send coordenates and state of both hands: open(0) and closed(1)
+  // PS: if the state is unkonwn, it will interpretate as closed
   for (int body = 0; body < pBodies.length; body++) {
     msg.clear();
     msg.setAddrPattern("/people/position/p" + body);
     ParticleBody particleBody = pBodies[body];
+    
+    // Mid spine coordinates
     msg.add(map(particleBody.center.x, 0, width, 0, 1));
     msg.add(map(particleBody.center.y, 0, height, 0, 1));
     msg.add(particleBody.center.z);
-
-    // Send state of both hands: unknown(0), not tracked(1), open(2), closed(3) and lasso(4)
     try {
-      msg.add(kinect.getSkeleton3d().get(body).getLeftHandState()); 
-      msg.add(kinect.getSkeleton3d().get(body).getRightHandState());
+      // Coordinates of left hand
+      msg.add(map(particleBody.leftHand.x, 0, width, 0, 1));
+      msg.add(map(particleBody.leftHand.y, 0, height, 0, 1));
+      msg.add(particleBody.leftHand.z);
+     
+      // Coordinates of right hand
+      msg.add(map(particleBody.rightHand.x, 0, width, 0, 1));
+      msg.add(map(particleBody.rightHand.y, 0, height, 0, 1));
+      msg.add(particleBody.rightHand.z);
+      
+      // State of left hand: open(2) closed(3)
+      if(kinect.getSkeleton3d().get(body).getLeftHandState()==3 && leftIsOpen==2)
+        leftIsOpen = 3;
+      else if(kinect.getSkeleton3d().get(body).getLeftHandState()==2 && leftIsOpen==3) 
+        leftIsOpen = 2;
+      msg.add(leftIsOpen-2);
+           
+      // State of right hand      
+      if(kinect.getSkeleton3d().get(body).getRightHandState()==3 && rightIsOpen==2)
+        rightIsOpen = 3;
+      else if(kinect.getSkeleton3d().get(body).getRightHandState()==2 && rightIsOpen==3)
+        rightIsOpen = 2;
+      msg.add(rightIsOpen-2);
+      
+      println("Left hand: "  + "x=" +particleBody.leftHand.x+", y=" + particleBody.leftHand.y+ ", z=" +particleBody.leftHand.z +", state="+(leftIsOpen==3?"closed":"open"));
+      println("Right hand: "  + "x=" +particleBody.rightHand.x+", y=" + particleBody.rightHand.y+ ", z=" +particleBody.rightHand.z +", state="+(rightIsOpen==3?"closed":"open"));
+      
+      color c1 = color(200, 0, 150);
+      if(rightIsOpen==3) {
+        fill(c1);
+        noStroke();
+        ellipse(particleBody.rightHand.x, particleBody.rightHand.y, 80,80);
+      }
+      
     } catch(Exception ex){
       println("No body detected");
     }
