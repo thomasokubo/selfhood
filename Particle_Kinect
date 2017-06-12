@@ -147,17 +147,17 @@ void draw() {
     msg.add(map(particleBody.center.x, 0, width, 0, 1));
     msg.add(map(particleBody.center.y, 0, height, 0, 1));
     msg.add(particleBody.center.z);
-    /*
-    msg.add(map(particleBody.leftHand.x, 0, width, 0, 1));
-    msg.add(map(particleBody.leftHand.y, 0, height, 0, 1));
-    msg.add(particleBody.leftHand.z);
-    msg.add(map(particleBody.rightHand.x, 0, width, 0, 1));
-    msg.add(map(particleBody.rightHand.y, 0, height, 0, 1));
-    msg.add(particleBody.rightHand.z);
-    */
+
+    // Send state of both hands: unknown(0), not tracked(1), open(2), closed(3) and lasso(4)
+    try {
+      msg.add(kinect.getSkeleton3d().get(body).getLeftHandState()); 
+      msg.add(kinect.getSkeleton3d().get(body).getRightHandState());
+    } catch(Exception ex){
+      println("No body detected");
+    }
     oscP5.send(msg, destinyLocation);   
   }
-
+  
   // Send a done signal
   msg.clear();
   msg.setAddrPattern("/people/done");
