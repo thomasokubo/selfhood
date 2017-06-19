@@ -25,17 +25,9 @@ float maxDist = dist(0, 0, width, height);
 // Inverted kinect
 boolean invKinect = false;
 
-// Physical space size
-float minX = 0;
-float maxX = 3;
-float minY = 0;
-float maxY = 1;
-float minZ = 0.3;
-float maxZ = 5;
-
 // Hands state
-int leftIsOpen;
-int rightIsOpen;
+ArrayList<Integer> leftState;
+ArrayList<Integer> rightState;
 
 
 // Record variables
@@ -59,11 +51,21 @@ void setup() {
 
   // Initiate body controller and destiny location
   oscP5 = new OscP5(this, 12000);
-  destinyLocation = new NetAddress("143.106.219.179", 12000);
+  destinyLocation = new NetAddress("143.106.219.176", 12000);
 
   // Initiate hands state
-  rightIsOpen = 2;
-  leftIsOpen = 2;
+  try {
+    leftState = new ArrayList<Integer>();
+    rightState = new ArrayList<Integer>();
+    for(int i=0;i<6;i++)
+      leftState.add(2);
+    for(int i=0;i<6;i++)
+      rightState.add(2);
+  } catch(NullPointerException ex) {
+    println("Exception: " +ex);
+  }
+  
+  
 
   // Instantiate record obj
   rec = new KRecord();
@@ -171,27 +173,35 @@ void draw() {
       msg.add(particleBody.rightHand.z);
       
       // State of left hand: open(2) closed(3)
-      if(kinect.getSkeleton3d().get(body).getLeftHandState()==3 && leftIsOpen==2)
-        leftIsOpen = 3;
-      else if(kinect.getSkeleton3d().get(body).getLeftHandState()==2 && leftIsOpen==3) 
-        leftIsOpen = 2;
-      msg.add(leftIsOpen-2);
+      if(kinect.getSkeleton3d().get(body).getLeftHandState()==3 && leftState.get(body)==2)
+        leftState.set(body,3);
+      else if(kinect.getSkeleton3d().get(body).getLeftHandState()==2 && leftState.get(body)==3) 
+        leftState.set(body,2);
+        
+      msg.add(leftState.get(body)-2);
            
       // State of right hand      
-      if(kinect.getSkeleton3d().get(body).getRightHandState()==3 && rightIsOpen==2)
-        rightIsOpen = 3;
-      else if(kinect.getSkeleton3d().get(body).getRightHandState()==2 && rightIsOpen==3)
-        rightIsOpen = 2;
-      msg.add(rightIsOpen-2);
+      if(kinect.getSkeleton3d().get(body).getRightHandState()==3 && rightState.get(body)==2)
+        rightState.set(body,3);
+      else if(kinect.getSkeleton3d().get(body).getRightHandState()==2 && rightState.get(body)==3)
+        rightState.set(body,2);
+        
+      msg.add(rightState.get(body)-2);
       
-      println("Left hand: "  + "x=" +particleBody.leftHand.x+", y=" + particleBody.leftHand.y+ ", z=" +particleBody.leftHand.z +", state="+(leftIsOpen==3?"closed":"open"));
-      println("Right hand: "  + "x=" +particleBody.rightHand.x+", y=" + particleBody.rightHand.y+ ", z=" +particleBody.rightHand.z +", state="+(rightIsOpen==3?"closed":"open"));
+      println("Left hand: "  + "x=" +particleBody.leftHand.x+", y=" + particleBody.leftHand.y+ ", z=" +particleBody.leftHand.z +", state="+(leftState.get(body)==3?"closed":"open"));
+      println("Right hand: "  + "x=" +particleBody.rightHand.x+", y=" + particleBody.rightHand.y+ ", z=" +particleBody.rightHand.z +", state="+(rightState.get(body)==3?"closed":"open"));
       
-      color c1 = color(200, 0, 150);
-      if(rightIsOpen==3) {
+      color c1 = color(0, 0, 0);
+      color c2 = color(0, 0, 0);
+      if(rightState.get(body)==3) {
         fill(c1);
         noStroke();
         ellipse(particleBody.rightHand.x, particleBody.rightHand.y, 80,80);
+      }
+      if(leftState.get(body)==3) {
+        fill(c2);
+        noStroke();
+        ellipse(particleBody.leftHand.x, particleBody.leftHand.y, 80,80);
       }
       
     } catch(Exception ex){
