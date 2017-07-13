@@ -33,8 +33,7 @@ ArrayList<Integer> rightState;
 // Record variables
 boolean isRecording = false;
 boolean isPlayingBack = false;
-String recordFilename = "rec2.txt";
-KRecord rec;
+
 
 void setup() {
   // Screen size, renderer and frameRate
@@ -69,11 +68,6 @@ void setup() {
   }
   
   
-
-  // Instantiate record obj
-  rec = new KRecord();
-  if (isPlayingBack)
-    rec.loadRecord(recordFilename);
 }
 
 void draw() {
@@ -85,30 +79,18 @@ void draw() {
 
   // Get bodies from record or kinect
   HashMap<Integer, PVector[]> bodies =  new HashMap<Integer, PVector[]>();
-  if (isPlayingBack) {
-    // Check if there is another frame
-    if (rec.hasFrame()) {
-      bodies = rec.getFrame();
-    } else {
-      println("End of record");
-      exit();
-      return;
+ // Get all joints from the detected bodies
+  for (KSkeleton skeleton : kinect.getSkeleton3d())
+    if (skeleton.isTracked()){
+        if(skeleton.getRightHandState()!=2){
+          bodies.put(skeleton.getIndexColor(), 
+          mapSkeletonToScreen(skeleton.getJoints()));
+        } else {
+          bodies.put(color(0,0,0), 
+          mapSkeletonToScreen(skeleton.getJoints()));
+        }
     }
-  } else {
-    // Get all joints from the detected bodies
-    for (KSkeleton skeleton : kinect.getSkeleton3d())
-      if (skeleton.isTracked()){
-          if(skeleton.getRightHandState()!=2){
-            bodies.put(skeleton.getIndexColor(), 
-            mapSkeletonToScreen(skeleton.getJoints()));
-          } else {
-            bodies.put(color(0,0,0), 
-            mapSkeletonToScreen(skeleton.getJoints()));
-          }
-      }
-    if (isRecording)
-      rec.addFrameRecord(bodies);
-  }
+
 
   Set<Integer> detectedId = bodies.keySet();
 
@@ -223,7 +205,6 @@ void draw() {
   msg.setAddrPattern("/people/done");
   msg.add(1);
   oscP5.send(msg, destinyLocation);
-  rec.saveRecord(recordFilename);
 }
 
 PVector[] mapSkeletonToScreen(KJoint[] joints) {
