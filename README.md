@@ -10,7 +10,7 @@ The computer graphics were generated with Processing 3, with the support of the 
 - gab.opencv
 - blobDetection
 
-Furthermore, it sends the processed data, collect by the KINECT, and sends it to Pure Data, through OSCP5.
+Furthermore, it sends the processed data, collect by the KINECT,  to Pure Data, through OSCP5.
 
 
 
