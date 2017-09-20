@@ -65,7 +65,7 @@ void draw() {
   text("FPS " + round(frameRate), 10, 10 + textAscent());
 
   
-  /******** ADD to other projects ****************************************************************************/ 
+  /******** ADD to MODEL class ****************************************************************************/ 
   // Get bodies from record or kinect
   HashMap<Integer, PVector[]> bodies =  new HashMap<Integer, PVector[]>();
   
@@ -78,6 +78,10 @@ void draw() {
   Set<Integer> detectedId = bodies.keySet();
   
   /************************************************************************************************************/
+  // Até aqui temos: bodies(HashMap<Integer, PVector[]>), detectedID
+  
+  
+  /******** ADD to VIEW class ****************************************************************************/
   // Update bodies position
   for (Integer id : bodies.keySet()) {
     ParticleBody pBody = particleBodies.getOrDefault(id, null);     
@@ -94,7 +98,7 @@ void draw() {
   }
   
   
-
+  // Verify if person is still present
   ParticleBody[] pBodies = particleBodies.values().toArray(new ParticleBody[0]);
 
   for (int b = pBodies.length - 1; b >=0; b--) {
@@ -105,6 +109,7 @@ void draw() {
     }
   }
 
+  //If certain is not tracked anymore, its particle body is removed
   if (detectedId.size() != particleBodies.size()) {
     ArrayList<Integer> deadBodies = new ArrayList<Integer>();
 
@@ -115,9 +120,14 @@ void draw() {
     for (Integer id : deadBodies)
       particleBodies.remove(id);
   }
+  /************************************************************************************************************/
+
 
   fill(255);
   text("Body count: " + particleBodies.size(), 10, 20 + textAscent());
+ 
+ 
+  // Communication Part ====================================================
   
   // Sends beginning information to PD with the number os people detected
   com.sendBeginningInfo(detectedId.size());
@@ -127,7 +137,11 @@ void draw() {
   for (int body = 0; body < pBodies.length; body++) {
     ParticleBody particleBody = pBodies[body];
     
+    
+  
     try {
+      
+      /******** ADD to MODEL class ****************************************************************************/    
       // State of left hand: open(2) closed(3)
       if(kinect.getSkeleton3d().get(body).getLeftHandState()==3 && leftState.get(body)==2)
         leftState.set(body,3);
@@ -140,6 +154,8 @@ void draw() {
         rightState.set(body,3);
       else if(kinect.getSkeleton3d().get(body).getRightHandState()==2 && rightState.get(body)==3)
         rightState.set(body,2);
+      /************************************************************************************************************/
+        
         
       // Sends person information  
       com.sendPersonInfo(body, particleBody.center.x, particleBody.center.y, particleBody.center.z, particleBody.leftHand.x, particleBody.leftHand.y, particleBody.leftHand.z, particleBody.rightHand.x, particleBody.rightHand.y, particleBody.rightHand.z, leftState.get(body)-2, rightState.get(body)-2);
