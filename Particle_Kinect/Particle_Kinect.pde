@@ -64,6 +64,8 @@ void draw() {
   // Print FPS
   text("FPS " + round(frameRate), 10, 10 + textAscent());
 
+  
+  /******** ADD to other projects ****************************************************************************/ 
   // Get bodies from record or kinect
   HashMap<Integer, PVector[]> bodies =  new HashMap<Integer, PVector[]>();
   
@@ -71,12 +73,11 @@ void draw() {
   for (KSkeleton skeleton : kinect.getSkeleton3d())
     if (skeleton.isTracked())
        bodies.put(skeleton.getIndexColor(), mapSkeletonToScreen(skeleton.getJoints()));
-  
     
-  // Particle Effects:  
   // Pass bodies indexes to detectedID
   Set<Integer> detectedId = bodies.keySet();
   
+  /************************************************************************************************************/
   // Update bodies position
   for (Integer id : bodies.keySet()) {
     ParticleBody pBody = particleBodies.getOrDefault(id, null);     
@@ -91,6 +92,8 @@ void draw() {
       pBody.update(bodies.get(id));
     }
   }
+  
+  
 
   ParticleBody[] pBodies = particleBodies.values().toArray(new ParticleBody[0]);
 
@@ -116,7 +119,7 @@ void draw() {
   fill(255);
   text("Body count: " + particleBodies.size(), 10, 20 + textAscent());
   
-  // Sends beginning infromation to PD
+  // Sends beginning information to PD with the number os people detected
   com.sendBeginningInfo(detectedId.size());
 
   // Send coordenates and state of both hands: open(0) and closed(1)
@@ -154,8 +157,8 @@ void draw() {
 
 
 /*============================================================================================================================================================================================*/
-// Particle Body model 
-
+// Particle Body model
+//TODO Add this function into ParticleBody class 
 PVector[] mapSkeletonToScreen(KJoint[] joints) {
   // Create mapped joints array
   PVector[] mappedJoints = new PVector[joints.length];
@@ -167,7 +170,9 @@ PVector[] mapSkeletonToScreen(KJoint[] joints) {
   return mappedJoints;
 }
 
+
 // Particle body
+/*
 class ParticleBody {
   ParticleSystem[] psJoints;
   PVector center;
@@ -240,8 +245,11 @@ class ParticleBody {
     return true;
   }
 }
+*/
+
 
 // Particle System
+/*************************************
 class ParticleSystem {
 
   ArrayList<Particle> particles;
@@ -277,8 +285,11 @@ class ParticleSystem {
     return particles.isEmpty();
   }
 }
+*********************/
+
 
 // A simple Particle class
+/*
 class Particle {
   PVector position;
   PVector velocity;
@@ -319,6 +330,7 @@ class Particle {
     return (millis() - birth > lifespan);
   }
 }
+*/
 
 class Timer {
   int initialTime;
@@ -336,6 +348,7 @@ class Timer {
   }
 }
 
+/*
 void handState(int handState) {
   switch(handState) {
   case KinectPV2.HandState_Open:
@@ -352,3 +365,4 @@ void handState(int handState) {
     break;
   }
 }
+*/
