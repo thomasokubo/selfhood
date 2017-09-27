@@ -13,6 +13,9 @@ KinectPV2 kinect;
 // Communication object
 Communication com;
 
+// Person object
+Person person;
+
 // Body of particles to be rendered
 HashMap<Integer, ParticleBody> particleBodies;
 
@@ -20,8 +23,8 @@ HashMap<Integer, ParticleBody> particleBodies;
 float maxDist = dist(0, 0, width, height);
 
 // Array to save the states of the hands
-ArrayList<Integer> leftState;
-ArrayList<Integer> rightState;
+// ArrayList<Integer> leftState;
+// ArrayList<Integer> rightState;
 
 
 void setup() {
@@ -44,8 +47,10 @@ void setup() {
   // Initialize Communication module
   com = new Communication(12000, "143.106.219.176"); 
 
+  person = new Person();
+  
   // Initiate hands state
-  try {
+ /* try {
     leftState = new ArrayList<Integer>();
     rightState = new ArrayList<Integer>();
     for(int i=0;i<6;i++){
@@ -55,6 +60,7 @@ void setup() {
   } catch(NullPointerException ex) {
     println("Exception: " +ex);
   }
+  */
 }
 
 void draw() {
@@ -65,7 +71,8 @@ void draw() {
   text("FPS " + round(frameRate), 10, 10 + textAscent());
 
   
-  /******** ADD to MODEL class ****************************************************************************/ 
+  /******** ADD to MODEL class ****************************************************************************/
+  /*
   // Get bodies from record or kinect
   HashMap<Integer, PVector[]> bodies =  new HashMap<Integer, PVector[]>();
   
@@ -73,27 +80,30 @@ void draw() {
   for (KSkeleton skeleton : kinect.getSkeleton3d())
     if (skeleton.isTracked())
        bodies.put(skeleton.getIndexColor(), mapSkeletonToScreen(skeleton.getJoints()));
-    
-  // Pass bodies indexes to detectedID
-  Set<Integer> detectedId = bodies.keySet();
+       
+  */
   
+  person.setJoints();  
   /************************************************************************************************************/
-  // Até aqui temos: bodies(HashMap<Integer, PVector[]>), detectedID
+  
   
   
   /******** ADD to VIEW class ****************************************************************************/
+  // Pass bodies indexes to detectedID
+  Set<Integer> detectedId = person.getKeys();
+  
   // Update bodies position
-  for (Integer id : bodies.keySet()) {
+  for (Integer id : person.getKeys()) {
     ParticleBody pBody = particleBodies.getOrDefault(id, null);     
 
     if (pBody == null) {
       // Create a new particle body
-      pBody = new ParticleBody(bodies.get(id), id);
+      pBody = new ParticleBody(person.getBodies().get(id), id);
       // Store list
       particleBodies.put(id, pBody);
     } else {
       // Update body's joints
-      pBody.update(bodies.get(id));
+      pBody.update(person.getBodies().get(id));
     }
   }
   
@@ -141,7 +151,9 @@ void draw() {
   
     try {
       
-      /******** ADD to MODEL class ****************************************************************************/    
+      
+      /******** ADD to MODEL class ****************************************************************************/
+      /*
       // State of left hand: open(2) closed(3)
       if(kinect.getSkeleton3d().get(body).getLeftHandState()==3 && leftState.get(body)==2)
         leftState.set(body,3);
@@ -154,8 +166,9 @@ void draw() {
         rightState.set(body,3);
       else if(kinect.getSkeleton3d().get(body).getRightHandState()==2 && rightState.get(body)==3)
         rightState.set(body,2);
+        */
       /************************************************************************************************************/
-        
+      person.setHandsState(body);
         
       // Sends person information  
       com.sendPersonInfo(body, particleBody.center.x, particleBody.center.y, particleBody.center.z, particleBody.leftHand.x, particleBody.leftHand.y, particleBody.leftHand.z, particleBody.rightHand.x, particleBody.rightHand.y, particleBody.rightHand.z, leftState.get(body)-2, rightState.get(body)-2);
@@ -174,8 +187,8 @@ void draw() {
 
 /*============================================================================================================================================================================================*/
 // Particle Body model
-//TODO Add this function into ParticleBody class 
-PVector[] mapSkeletonToScreen(KJoint[] joints) {
+//TODO Add this function into ParticleBody class
+/*PVector[] mapSkeletonToScreen(KJoint[] joints) {
   // Create mapped joints array
   PVector[] mappedJoints = new PVector[joints.length];
   for (int j = 0; j < joints.length; j++) {
@@ -185,7 +198,7 @@ PVector[] mapSkeletonToScreen(KJoint[] joints) {
   }
   return mappedJoints;
 }
-
+*/
 
 // Particle body
 /*

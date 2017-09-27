@@ -1,4 +1,6 @@
 class Util {
+
+   Util(){}
   
    PVector[] mapSkeletonToScreen(KJoint[] joints) {
     // Create mapped joints array
@@ -9,8 +11,5 @@ class Util {
       mappedJoints[j].y *= (float)height / KinectPV2.HEIGHTColor;
     }
     return mappedJoints;
+  }
 }
-  
-  
-
-}}
