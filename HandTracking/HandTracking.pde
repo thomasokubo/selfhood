@@ -1,19 +1,20 @@
+import java.util.Set;
 import java.util.ArrayList;
 import KinectPV2.KJoint;
 import KinectPV2.*;
-import oscP5.*;
-import netP5.*;
+//import oscP5.*;
+//import netP5.*;
 
 KinectPV2 kinect;
-
+Person person;
 Communication com;
+Ball bodies[];
 
 float thold = 5;
 float spifac = 1.05;
 int outnum;
 float drag = 0.01;
 int big = 1000;
-ball bodies[] = new ball[big];
 float mX;
 float mY;
 
@@ -25,13 +26,12 @@ void setup() {
   stroke(255, 255, 255, 5);
   background(0, 0, 0);
   smooth(4);
-
-  translate(width/KinectPV2.WIDTHColor,0,0);
-  scale(2,1,1);
-  for(int i = 0; i < big; i++) {
-    bodies[i] = new ball();
-  }
   
+  // Trying to put in the center of screen
+  translate(width/KinectPV2.WIDTHColor, 0, 0);
+  scale(2,1,1);
+  
+
   kinect = new KinectPV2(this);
 
   //Enables depth and Body tracking (mask image)
@@ -43,38 +43,53 @@ void setup() {
   kinect.enableColorImg(true);
   /*****************************************/
   kinect.init();
-  
+
+  bodies = new Ball[big];
+    for(int i = 0; i < big; i++)
+      bodies[i] = new Ball();
+      
   com = new Communication(12000, "143.106.219.176");  
 }
 
 void draw() {
   
   
+  person.setJoints();
+  
   //get the skeletons as an Arraylist of KSkeletons
-  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  //ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   //ArrayList<KSkeleton> skeletonArray =kinect.getSkeleton3d();
 
   fill(255);
-  text("Number of people: " + skeletonArray.size(), 10, 20 + textAscent());
+  text("Number of people: " + person.getSize(), 10, 20 + textAscent());
 
-  int numBodies=0;
+/*  int numBodies=0;
   //individual joints
   for (int i = 0; i < skeletonArray.size(); i++) {  
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
     if (skeleton.isTracked()) 
       numBodies++;
   }
+*/
 
-  com.sendBeginningInfo(skeletonArray.size());
+  
+
+  com.sendBeginningInfo(person.getSize());
+  Set<Integer> bodyKeys = person.getKeys();
   //individual joints
-  for (int i = 0; i < skeletonArray.size(); i++) {
+  for (int i = 0; i < person.getSize(); i++) {
     
-    KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-    if (skeleton.isTracked()) {
-      KJoint[] joints = skeleton.getJoints();
+    
+    //KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
+    //if (skeleton.isTracked()) {
+      //KJoint[] joints = skeleton.getJoints();
       
-   
+      
+     if (bodyKeys.contains(person.getBodies().get(i))) {
+      PVector[] joints = person.getBodies().get(i);
+      
+      // WTF
       String x = Float.toString(joints[KinectPV2.JointType_HandRight].getX());
       if(x!="-Infinity"){
         
@@ -95,16 +110,12 @@ void draw() {
       } else {
         println("To -infinity");
       }
-      
-      
-      
-     
     }
-    
   } 
   com.sendEndingInfo();
 }
 
+/*2
 class ball {
   float X;
   float Y;
@@ -137,4 +148,6 @@ class ball {
     pX = X;
     pY = Y;
   }
+  
 }
+*/
