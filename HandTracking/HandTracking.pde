@@ -57,7 +57,7 @@ void draw() {
   person.setJoints();
   
   //get the skeletons as an Arraylist of KSkeletons
-  //ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   //ArrayList<KSkeleton> skeletonArray =kinect.getSkeleton3d();
 
@@ -80,16 +80,11 @@ void draw() {
   //individual joints
   for (int i = 0; i < person.getSize(); i++) {
     
-    
-    //KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-    //if (skeleton.isTracked()) {
-      //KJoint[] joints = skeleton.getJoints();
+    KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
+    if (skeleton.isTracked()) {
+      KJoint[] joints = skeleton.getJoints();
       
-      
-     if (bodyKeys.contains(person.getBodies().get(i))) {
-      PVector[] joints = person.getBodies().get(i);
-      
-      // WTF
+   
       String x = Float.toString(joints[KinectPV2.JointType_HandRight].getX());
       if(x!="-Infinity"){
         

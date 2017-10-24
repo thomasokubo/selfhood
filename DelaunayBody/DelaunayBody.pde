@@ -17,6 +17,7 @@ import gab.opencv.*;
 
 KinectPV2 kinect;
 OpenCV opencv;
+Person person;
 //OscP5 osc;
 //NetAddress destinyLocation;
 Communication com;
@@ -57,16 +58,19 @@ void setup() {
 
   
   /* ADD **********************************/  
+  
+  person = new Person();
   //osc = new OscP5(this,12000);
   //destinyLocation = new NetAddress("143.106.219.176,12000", 12000);
   com = new Communication(12000, "143.106.219.176,12000");
-
+/*
   leftHandState = new ArrayList<Integer>();
   rightHandState = new ArrayList<Integer>();
   for(int i=0;i<6;i++){
     leftHandState.add(2);
     rightHandState.add(2);
   }
+  */
  /****************************************/
  
 }
@@ -200,7 +204,7 @@ void draw() {
           
         drawHandState(joints, i);
       */
-        com.sendPersonInfo(joints[KinectPV2.JointType_SpineMid].getX(),joints[KinectPV2.JointType_SpineMid].getY(), joints[KinectPV2.JointType_SpineMid].getZ(), joints[KinectPV2.JointType_HandLeft].getX(),joints[KinectPV2.JointType_HandLeft].getY(), joints[KinectPV2.JointType_HandLeft].getZ(),joints[KinectPV2.JointType_HandRight].getX(),joints[KinectPV2.JointType_HandRight].getY(), joints[KinectPV2.JointType_HandRight].getZ(),leftHandState.get(i)-2 rightHandState.get(i)-2);
+        com.sendPersonInfo(i, joints[KinectPV2.JointType_SpineMid].getX(),joints[KinectPV2.JointType_SpineMid].getY(), joints[KinectPV2.JointType_SpineMid].getZ(), joints[KinectPV2.JointType_HandLeft].getX(),joints[KinectPV2.JointType_HandLeft].getY(), joints[KinectPV2.JointType_HandLeft].getZ(),joints[KinectPV2.JointType_HandRight].getX(),joints[KinectPV2.JointType_HandRight].getY(), joints[KinectPV2.JointType_HandRight].getZ(), person.leftState.get(i)-2, person.rightState.get(i)-2);
       } catch (Exception ex) {
         println("No body detected");
       }
@@ -366,7 +370,7 @@ void drawHandState(KJoint[] joints, int i) {
   
 }
 
-
+/*
 
 //Depending on the hand state change the color
 void leftHandState(int handState) {
@@ -383,8 +387,7 @@ void leftHandState(int handState) {
       fill(255, 255, 0);
     break;
   case KinectPV2.HandState_NotTracked:
-    /*if(!leftOpen)
-      fill(255, 255, 0);*/
+    
     leftOpen = true; 
     break;
     
@@ -410,4 +413,4 @@ void rightHandState(int handState) {
     
     
   }
-}
+}*/
