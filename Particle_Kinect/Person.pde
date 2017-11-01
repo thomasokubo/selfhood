@@ -27,9 +27,13 @@ class Person {
  
   void setJoints(){
     // Set all joints from the detected bodies
+    bodies =  new HashMap<Integer, PVector[]>();
     for (KSkeleton skeleton : kinect.getSkeleton3d())
       if (skeleton.isTracked())
          this.bodies.put(skeleton.getIndexColor(), util.mapSkeletonToScreen(skeleton.getJoints()));
+
+       
+        
   }
   
   
