@@ -4,18 +4,17 @@ import KinectPV2.*;
 import oscP5.*;
 import netP5.*;
 
-KinectPV2 kinect;
-
-Communication com;
-
 float thold = 5;
 float spifac = 1.05;
 int outnum;
 float drag = 0.01;
 int big = 1000;
-ball bodies[] = new ball[big];
 float mX;
 float mY;
+
+KinectPV2 kinect;
+Communication com;
+Ball bodies[] = new Ball[big];
 
 void setup() {
   //size(1280, 720);
@@ -29,7 +28,7 @@ void setup() {
   translate(width/KinectPV2.WIDTHColor,0,0);
   scale(2,1,1);
   for(int i = 0; i < big; i++) {
-    bodies[i] = new ball();
+    bodies[i] = new Ball();
   }
   
   kinect = new KinectPV2(this);
@@ -95,46 +94,7 @@ void draw() {
       } else {
         println("To -infinity");
       }
-      
-      
-      
-     
     }
-    
   } 
   com.sendEndingInfo();
-}
-
-class ball {
-  float X;
-  float Y;
-  float Xv;
-  float Yv;
-  float pX;
-  float pY;
-  float w;
-  
-  ball() {
-    try{
-      X = random(width/KinectPV2.WIDTHColor);
-      Y = random(height/KinectPV2.HEIGHTColor);
-      w = random(1/thold, thold);
-    } catch(Exception ex){
-      println("To infinity");
-    }
-  }
-  
-  void render(KJoint joint) {
-    if(joint.getState() != 2) {
-      Xv /= spifac;
-      Yv /= spifac;
-    }
-    Xv += drag * (mX - X) * w;
-    Yv += drag * (mY - Y) * w;
-    X += Xv;
-    Y += Yv;
-    line(X, Y, pX, pY);
-    pX = X;
-    pY = Y;
-  }
 }

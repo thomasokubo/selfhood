@@ -10,14 +10,17 @@ import KinectPV2.*;
 import megamu.mesh.*;
 import gab.opencv.*;
 
+
 // OSC libraries
-import netP5.*;
-import oscP5.*;
+//import netP5.*;
+//import oscP5.*;
 
 KinectPV2 kinect;
 OpenCV opencv;
-OscP5 osc;
-NetAddress destinyLocation;
+Person person;
+//OscP5 osc;
+//NetAddress destinyLocation;
+Communication com;
 
 PImage img;
 PImage src, dst;
@@ -55,15 +58,19 @@ void setup() {
 
   
   /* ADD **********************************/  
-  osc = new OscP5(this,12000);
-  destinyLocation = new NetAddress("143.106.219.176,12000", 12000);
-
+  
+  person = new Person();
+  //osc = new OscP5(this,12000);
+  //destinyLocation = new NetAddress("143.106.219.176,12000", 12000);
+  com = new Communication(12000, "143.106.219.176,12000");
+/*
   leftHandState = new ArrayList<Integer>();
   rightHandState = new ArrayList<Integer>();
   for(int i=0;i<6;i++){
     leftHandState.add(2);
     rightHandState.add(2);
   }
+  */
  /****************************************/
  
 }
@@ -143,21 +150,23 @@ void draw() {
   println("Number of people: " + skeletonArray.size());
   
   // Send number of people to PD
-  OscMessage msg = new OscMessage("/people/number");
-  msg.add(skeletonArray.size());
-  osc.send(msg, destinyLocation);
+  //OscMessage msg = new OscMessage("/people/number");
+  //msg.add(skeletonArray.size());
+  //osc.send(msg, destinyLocation);
+  com.sendBeginningInfo(skeletonArray.size());
   
   
   for(int i=0;i<skeletonArray.size() && i<6 ;i++){
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
     if(skeleton.isTracked()){
+      KJoint[] joints = skeleton.getJoints();
+      try {
+      /*
       msg.clear();
       msg.setAddrPattern("/people/position/p" + i);
       
-      KJoint[] joints = skeleton.getJoints();
-
-      try {
-        
+     
+      
         // All coordinates were normalized in [0-1]
         // Mid spine coordinates 
         msg.add(map(joints[KinectPV2.JointType_SpineMid].getX(), 0, width,  0,1));
@@ -194,12 +203,14 @@ void draw() {
         msg.add(rightHandState.get(i)-2);
           
         drawHandState(joints, i);
-    
+      */
+        com.sendPersonInfo(i, joints[KinectPV2.JointType_SpineMid].getX(),joints[KinectPV2.JointType_SpineMid].getY(), joints[KinectPV2.JointType_SpineMid].getZ(), joints[KinectPV2.JointType_HandLeft].getX(),joints[KinectPV2.JointType_HandLeft].getY(), joints[KinectPV2.JointType_HandLeft].getZ(),joints[KinectPV2.JointType_HandRight].getX(),joints[KinectPV2.JointType_HandRight].getY(), joints[KinectPV2.JointType_HandRight].getZ(), person.leftState.get(i)-2, person.rightState.get(i)-2);
       } catch (Exception ex) {
         println("No body detected");
       }
       
-      osc.send(msg, destinyLocation);
+      //osc.send(msg, destinyLocation);
+      com.sendEndingInfo();
       
     }
   }  
@@ -359,7 +370,7 @@ void drawHandState(KJoint[] joints, int i) {
   
 }
 
-
+/*
 
 //Depending on the hand state change the color
 void leftHandState(int handState) {
@@ -376,8 +387,7 @@ void leftHandState(int handState) {
       fill(255, 255, 0);
     break;
   case KinectPV2.HandState_NotTracked:
-    /*if(!leftOpen)
-      fill(255, 255, 0);*/
+    
     leftOpen = true; 
     break;
     
@@ -403,4 +413,4 @@ void rightHandState(int handState) {
     
     
   }
-}
+}*/

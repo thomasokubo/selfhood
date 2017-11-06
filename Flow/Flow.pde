@@ -12,6 +12,13 @@ BlobDetection theBlobDetection;
 // Custom polygon for blob representation
 PolygonBlob poly = new PolygonBlob();
 
+// Person object
+Person person;
+
+// Communication object
+Communcatin com;
+
+
 // PImage to hold incoming imagery and smaller one for blob detection
 PImage KinectImage, BlobsImage;
 
@@ -53,14 +60,14 @@ Particle[] flow = new Particle[2250];
 
 float globalX, globalY;
 
-
+ //<>//
 
 void setup() {
 
   // it's possible to customize this, for example 1920x1080
 
   //size(1280, 720, FX2D);
-  //size(1280, 720); //<>//
+  //size(1280, 720); //<>// //<>//
   fullScreen(P3D, SPAN);
 
   // initialize SimpleOpenNI object
@@ -69,6 +76,8 @@ void setup() {
   kinect.enableBodyTrackImg(true);
   kinect.init();
 
+  person = new Person();
+  com = new Communication(12000, "146.109.312.516").
 
     // calculate the reScale value
 
@@ -103,6 +112,8 @@ void draw() {
 
   // Get Kinect user image
   KinectImage = kinect.getBodyTrackImage();
+  
+  person.setJoints();
 
   // Rescale and blur image for blob detection
   BlobsImage.copy(KinectImage, 0, 0, KinectImage.width, KinectImage.height, 0, 0, BlobsImage.width, BlobsImage.height);
