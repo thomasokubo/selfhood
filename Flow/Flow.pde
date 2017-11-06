@@ -3,6 +3,8 @@ import KinectPV2.*;
 // Blob detection library
 import blobDetection.*;
 
+import java.util.Set;
+
 // Kinect interface
 KinectPV2 kinect;
 
@@ -16,30 +18,23 @@ PolygonBlob poly = new PolygonBlob();
 Person person;
 
 // Communication object
-Communcatin com;
+Communication com;
 
 
 // PImage to hold incoming imagery and smaller one for blob detection
 PImage KinectImage, BlobsImage;
 
 // the kinect's dimensions to be used later on for calculations
-
 int kinectWidth = 640;
-
 int kinectHeight = 480;
 
 // to center and rescale from 640x480 to higher custom resolutions
-
 float reScale;
 
-
-
 // background color
-
 color bgColor;
 
 // three color palettes (artifact from me storing many interesting color palettes as strings in an external data file ;-)
-
 String[] palettes = {
 
   "-1117720,-13683658,-8410437,-9998215,-1849945,-5517090,-4250587,-14178341,-5804972,-3498634", 
@@ -50,54 +45,38 @@ String[] palettes = {
 
 };
 
-
-
 // an array called flow of 2250 Particle objects (see Particle class)
-
 Particle[] flow = new Particle[2250];
 
 // global variables to influence the movement of all particles
-
 float globalX, globalY;
-
  //<>//
-
 void setup() {
 
-  // it's possible to customize this, for example 1920x1080
-
+ 
   //size(1280, 720, FX2D);
   //size(1280, 720); //<>// //<>//
   fullScreen(P3D, SPAN);
-
-  // initialize SimpleOpenNI object
 
   kinect = new KinectPV2(this);
   kinect.enableBodyTrackImg(true);
   kinect.init();
 
   person = new Person();
-  com = new Communication(12000, "146.109.312.516").
+  com = new Communication(12000, "146.109.312.516");
 
-    // calculate the reScale value
+  // calculate the reScale value
+  // currently it's rescaled to fill the complete width (cuts of top-bottom)
+  // it's also possible to fill the complete height (leaves empty sides)
+  reScale = (float) width / kinectWidth;
 
-    // currently it's rescaled to fill the complete width (cuts of top-bottom)
+  // create a smaller blob image for speed and efficiency
+  BlobsImage = createImage(kinectWidth/3, kinectHeight/3, RGB);
 
-    // it's also possible to fill the complete height (leaves empty sides)
-
-    reScale = (float) width / kinectWidth;
-
-    // create a smaller blob image for speed and efficiency
-
-    BlobsImage = createImage(kinectWidth/3, kinectHeight/3, RGB);
-
-    // initialize blob detection object to the blob image dimensions
-
-    theBlobDetection = new BlobDetection(BlobsImage.width, BlobsImage.height);
-
-    theBlobDetection.setThreshold(0.2);
-
-    setupFlowfield();
+  // initialize blob detection object to the blob image dimensions
+  theBlobDetection = new BlobDetection(BlobsImage.width, BlobsImage.height);
+  theBlobDetection.setThreshold(0.2);
+  setupFlowfield();
 }
 
 
