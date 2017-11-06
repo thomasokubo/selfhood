@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Set;
 import KinectPV2.KJoint;
 import KinectPV2.*;
 import oscP5.*;
