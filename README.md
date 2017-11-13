@@ -15,7 +15,7 @@ In order to execute the programs in this repository, you must isntall the follow
 | oscP5 | [oscp5/src/main/java/oscP5/](https://github.com/sojamo/oscp5) |
 | netP5 | [oscp5/src/main/java/netP5/](https://github.com/sojamo/oscp5/tree/master/src/main/java/netP5) |
 | megamu.mesh | [leebyron/mesh](https://github.com/leebyron/mesh) |
-| gab.opencv | [opencv-processing/src/gab/opencv/] (https://github.com/atduskgreg/opencv-processing/tree/master/src/gab/opencv)|
+| gab.opencv | [opencv-processing/src/gab/opencv/](https://github.com/atduskgreg/opencv-processing/tree/master/src/gab/opencv)|
 | blobDetection | [processing/BlobDetection/](http://www.v3ga.net/processing/BlobDetection/) |
 
 You can install them directly via your Processing3 IDE. To do so, execute the following steps:
