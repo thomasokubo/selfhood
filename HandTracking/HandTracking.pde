@@ -1,9 +1,13 @@
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.*;
 import KinectPV2.KJoint;
 import KinectPV2.*;
+// OSC libraries
 import oscP5.*;
 import netP5.*;
+
+
 
 float thold = 5;
 float spifac = 1.05;
@@ -16,18 +20,21 @@ float mY;
 KinectPV2 kinect;
 Communication com;
 Ball bodies[] = new Ball[big];
+HashMap<Integer, BallHand> ballHands;
+HashMap<Integer, PVector> trackedBodies;
 
 void setup() {
   //size(1280, 720);
-  fullScreen(P2D, SPAN);
+  fullScreen(P3D, SPAN);
   strokeWeight(1);
   fill(255, 255, 255);
   stroke(255, 255, 255, 5);
   background(0, 0, 0);
   smooth(4);
 
-  translate(width/KinectPV2.WIDTHColor,0,0);
-  scale(2,1,1);
+  //translate(width/KinectPV2.WIDTHColor,0,0);
+  //scale(2,1,1);
+  
   for(int i = 0; i < big; i++) {
     bodies[i] = new Ball();
   }
@@ -44,27 +51,57 @@ void setup() {
   /*****************************************/
   kinect.init();
   
+  ballHands = new HashMap<Integer, BallHand>();
   com = new Communication(12000, "143.106.219.176");  
 }
 
 void draw() {
   
-  
-  //get the skeletons as an Arraylist of KSkeletons
-  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
-
-  //ArrayList<KSkeleton> skeletonArray =kinect.getSkeleton3d();
-
   fill(255);
-  text("Number of people: " + skeletonArray.size(), 10, 20 + textAscent());
+  text("Number of people: " + skeletonArray.size(), 10, 20 + textAscent());  
 
-  int numBodies=0;
-  //individual joints
-  for (int i = 0; i < skeletonArray.size(); i++) {  
-    KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-    if (skeleton.isTracked()) 
-      numBodies++;
+  // Set all joints from the detected bodies
+  trackedBodies =  new HashMap<Integer, PVector[]>();
+  for (KSkeleton skeleton : kinect.getSkeleton3d())
+    if (skeleton.isTracked())
+       this.trackedBodies.put(skeleton.getIndexColor(), util.mapSkeletonToScreen(skeleton.getJoints()));
+
+
+  // update bodies position
+  for(Integer id: trackedBodies.keySet()){
+    BallHand bh = ballHands.getOrDefault(id, null);
+    
+    if(bh==null){
+      bh = new BallHand(trackedBodies.get(id), id);
+      trackedBodies.put(id, bh);
+    } else {
+      bh.update(trackedBodies.get(id));
+    }
   }
+
+  //verify if person is still present
+  BallHand[] bhands = ballhands.values().toArray(new BallHand[0]); 
+
+  for(int b = bhands.length-1; b>=0;b--){
+    if(trackedBodies.keySet().contains(bhands[b].bodyColor)){
+      PVector body = trackedBodies.get(bhands[b].bodyColor);
+     // bhands[b].render()
+    
+    }
+  }
+  
+  //If certain is not tracked anymore, its particle body is removed
+  if (trackedBodies.keySet().size() != particleBodies.size()) {
+    ArrayList<Integer> deadBodies = new ArrayList<Integer>();
+
+    for (Integer id : trackedBodies.keySet())
+      if (!deadBodies.contains(id))
+        deadBodies.add(id);
+
+    for (Integer id : deadBodies)
+      particleBodies.remove(id);
+  }  
+  
 
   com.sendBeginningInfo(skeletonArray.size());
   //individual joints
