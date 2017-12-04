@@ -5,6 +5,8 @@ class BallHand {
   PVector center;
   PVector leftHand;
   PVector rightHand;
+  int rightState;
+  int leftState;
   int bodyColor;
 
   public BallHand(PVector[] joints, int bodyColor) {
@@ -16,56 +18,31 @@ class BallHand {
 
        
     // Create ps list
-    balls = new BallSystem[joints.length];
+    //balls = new BallSystem[joints.length];
     // Create ps joints
     for (int j = 0; j < joints.length; j++)
-      balls[j] = new BallSystem(20, joints[j], bodyColor);
+      bodies[j] = new Ball();
       
     center = joints[KinectPV2.JointType_SpineMid];
     leftHand = joints[KinectPV2.JointType_HandLeft];
     rightHand = joints[KinectPV2.JointType_HandRight];
+    leftState = 2;
+    rightState = 2;  
   }
 
-  public void update(PVector[] joints) {
-    for (int j = 0; j < joints.length; j++)
-      // Update ps positions
-      balls[j].origin = joints[j];
+  public void update(PVector[] joints, Integer left, Integer right) {
     center = joints[KinectPV2.JointType_SpineMid];
     leftHand = joints[KinectPV2.JointType_HandLeft];
     rightHand = joints[KinectPV2.JointType_HandRight];
+    
+    rightState = right;
+    leftState = left;
   }
 
-  public void render(int handState) {
-    // Check if its time to add a new particle to the each ps
-    //if (addParticleTimer.getTime() > 1) {
-    //  int pColor = bodyColor;
-    //  for (int b = 0; b < pBodies.length; b++) {
-    //    //if(rightState.get(b)==2) bodyColor=0;
-    //    if (pBodies[b].bodyColor == bodyColor)
-    //      continue;
-    //    float dist = dist(pBodies[b].center.x, pBodies[b].center.y, center.x, center.y);
-    //    float choice = random(maxDist); 
-    //    text(choice + " \\ " + dist, 10, 30 + textAscent());
-    //    if (5 * choice > dist) {
-    //      pColor = pBodies[b].bodyColor;
-    //      break;
-    //    }
-    //  }
-    //  for (int j = 0; j < psJoints.length; j++) {
-    //    // Run ps
-    //    psJoints[j].run();
-    //    // Add a new particle to the ps
-    //    psJoints[j].addParticle(1, pColor);
-    //  }
-    //  addParticleTimer.reset();
-    //} else {
-    //  for (int j = 0; j < psJoints.length; j++) {
-    //    // Run ps
-    //    psJoints[j].run();
-    //  }
-    //}
+  public void render() {
    
-    for (int j = 0; j < balls.length; j++) {
-        this.balls[j].run(handState);
+    for (int j = 0; j < bodies.length; j++) {
+        this.bodies[j].render(rightState);
     }
   }
+}
