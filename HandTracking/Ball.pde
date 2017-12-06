@@ -1,3 +1,10 @@
+// Const. variables
+float thold = 5;
+float spifac = 1.05;
+int outnum;
+float drag = 0.01;
+int big = 1000;
+
 class Ball {
   float X;
   float Y;
@@ -17,11 +24,13 @@ class Ball {
     }
   }
   
-  void render(KJoint joint) {
-    if(joint.getState() != 2) {
+  void render(int handState) {  
+  
+    if(handState != 2) {
       Xv /= spifac;
       Yv /= spifac;
     }
+
     Xv += drag * (mX - X) * w;
     Yv += drag * (mY - Y) * w;
     X += Xv;
