@@ -16,12 +16,6 @@ Communication com;
 Person person;
 
 
-// Const. variables
-float thold = 5;
-float spifac = 1.05;
-int outnum;
-float drag = 0.01;
-int big = 1000;
 
 // Turn into a vector
 float mX;
@@ -74,18 +68,20 @@ void draw() {
       bh.update(person.getBodies().get(id), person.getLeftState(id), person.getRightState(id));
     }
   }
+  
+  /***********VERIFIED***********/
+
 
   //verify if person is still present
   BallHand[] bhands = ballHands.values().toArray(new BallHand[0]); 
 
   for(int b = bhands.length-1; b>=0;b--){
     if(detectedId.contains(bhands[b].bodyColor)){
-      bhands[b].render();
-      //PVector body = trackedBodies.get(bhands[b].bodyColor);
-     // bhands[b].render()
+      bhands[b].render(); // Problema aqui
     }
   }
   
+
   //If certain is not tracked anymore, its particle body is removed
   if (detectedId.size() != ballHands.size()) {
     ArrayList<Integer> deadBodies = new ArrayList<Integer>();
@@ -99,45 +95,35 @@ void draw() {
   }  
   
   fill(255);
-  //text("Number of people: " + skeletonArray.size(), 10, 20 + textAscent());
   text("Number of people: " + ballHands.size(), 10, 20 + textAscent());
-
-
-  //ArrayList<KSkeleton> skeletonArray = kinect.getSkeleton3d();
-  
   com.sendBeginningInfo(detectedId.size());
+  
+  /*
   //individual joints
   for (int i = 0; i < bhands.length; i++) {
-    
-    //KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-    BallHand hand = bhands[i];
-    //if (skeleton.isTracked()) {
-     // KJoint[] joints = skeleton.getJoints();
-      
    
+    BallHand hand = bhands[i];
+      
       String x = Float.toString(hand.rightHand.x);
       if(x!="-Infinity"){
         
-        //if(joints[KinectPV2.JointType_HandRight].getState() == 3) {
         if(kinect.getSkeleton3d().get(i).getRightHandState() == 2) {
           background(0, 0, 0);
-          //mX += 0.1 * (joints[KinectPV2.JointType_HandRight].getX()  - mX);
+
           mX += 0.1 * (hand.rightHand.x  - mX);
           mY += 0.1 * (hand.rightHand.y - mY);
         }
   
         mX += 0.1 * (hand.rightHand.x - mX);
-        mY += 0.1 * (hand.rightHand.y - mY);
-        /*  
-        for(int j = 0; j < big; j++) {
-          bodies[j].render(joints[KinectPV2.JointType_HandRight].getState());
-        }       
-        */
+        mY += 0.1 * (hand.rightHand.y - mY);  
+ 
         com.sendPersonInfo(i, hand.center.x, hand.center.y, hand.center.z, hand.rightHand.x, hand.rightHand.y, hand.rightHand.z, hand.leftHand.x,  hand.leftHand.y, hand.leftHand.z, hand.leftState, hand.rightState);
       } else {
         println("To -infinity");
       }
     }
-  //} 
+  
   com.sendEndingInfo();
+  */
+ 
 }
